@@ -17,31 +17,7 @@ fn main() {
                 match stream.read(&mut buf) {
                     Ok(0) => continue,
                     Ok(n) => match str::from_utf8(&buf[..n]) {
-                        Ok(request) => {
-                            let mut splitted_request = request.split_whitespace();
-                            let method = splitted_request.next();
-                            let body = splitted_request.next();
-                            match method {
-                                Some("put") => {
-                                    if let Some(x) = body {
-                                        handle_put(x, file_path);
-                                    } else {
-                                        println!("Cannot handle put command");
-                                    }
-                                }
-                                Some("get") => {
-                                    if let Some(x) = body {
-                                        handle_get(x, file_path);
-                                    } else {
-                                        println!("Cannot handle get command");
-                                    }
-                                }
-                                Some("maxoffset") => {
-                                    handle_maxoffset(file_path);
-                                }
-                                _ => println!("Cannot handle command"),
-                            }
-                        }
+                        Ok(request) => handle_request(request, file_path),
                         Err(_) => continue,
                     },
                     Err(_) => continue,
@@ -50,6 +26,32 @@ fn main() {
             Some(Err(_)) => continue,
             None => continue,
         }
+    }
+}
+
+fn handle_request(request: &str, file_path: &str) {
+    let mut splitted_request = request.split_whitespace();
+    let method = splitted_request.next();
+    let body = splitted_request.next();
+    match method {
+        Some("put") => {
+            if let Some(x) = body {
+                handle_put(x, file_path);
+            } else {
+                println!("Cannot handle put command");
+            }
+        }
+        Some("get") => {
+            if let Some(x) = body {
+                handle_get(x, file_path);
+            } else {
+                println!("Cannot handle get command");
+            }
+        }
+        Some("maxoffset") => {
+            handle_maxoffset(file_path);
+        }
+        _ => println!("Cannot handle command"),
     }
 }
 
