@@ -6,7 +6,7 @@ An event streaming broker, written in Rust.
 
 ### v0.1 — single node, single topic
 
-- [ ] append-only log on disk
+- [x] append-only log on disk
 - [ ] minimal wire protocol over TCP (length-prefixed frames)
 - [ ] produce and fetch from an offset
 - [ ] CLI for publishing and tailing
