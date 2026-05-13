@@ -37,29 +37,26 @@ fn handle_request(request: &str, file_path: &str) -> String {
     let mut splitted_request = request.split_whitespace();
     let method = splitted_request.next();
     let body = splitted_request.next();
-    let response = match method {
+
+    match method {
         Some("put") => {
             if let Some(x) = body {
-                return handle_put(x, file_path);
+                handle_put(x, file_path)
             } else {
-                return "Cannot handle put command".to_string();
+                "Cannot handle put command".to_string()
             }
         }
         Some("get") => {
             if let Some(x) = body {
-                return handle_get(x, file_path);
+                handle_get(x, file_path)
             } else {
-                return "Cannot handle get command".to_string();
+                "Cannot handle get command".to_string()
             }
         }
-        Some("maxoffset") => {
-            return handle_maxoffset(file_path);
-        }
+        Some("maxoffset") => handle_maxoffset(file_path),
         Some(parsed) => format!("Method {} not found", parsed).to_string(),
         None => "Cannot handle command".to_string(),
-    };
-
-    response
+    }
 }
 
 fn handle_put(command: &str, file_path: &str) -> String {
@@ -77,9 +74,11 @@ fn handle_put(command: &str, file_path: &str) -> String {
 
 fn handle_get(command: &str, file_path: &str) -> String {
     let offset = command.parse::<usize>().unwrap();
+
     let mut buffer = File::open(file_path).unwrap();
     let mut buf = String::new();
     buffer.read_to_string(&mut buf).unwrap();
+
     let line = buf.lines().nth(offset).unwrap();
     line.to_string()
 }
