@@ -1,37 +1,54 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Read, Write, stdin},
+    io::{Read, Write},
+    net::TcpListener,
 };
 
 //struct Message {}
 
 fn main() {
     let file_path = "data.txt";
+    let listener = TcpListener::bind("127.0.0.1:2137").expect("Failed to bind TCP listener");
+
     loop {
-        let mut input = String::new();
-        stdin().read_line(&mut input).unwrap();
-        let mut splitted_input = input.split_whitespace();
-        let method = splitted_input.next();
-        let body = splitted_input.next();
-        match method {
-            Some("put") => {
-                if let Some(x) = body {
-                    handle_put(x, file_path);
-                } else {
-                    println!("Cannot handle put command");
+        match listener.incoming().next() {
+            Some(Ok(mut stream)) => {
+                let mut buf = [0u8; 4096];
+                match stream.read(&mut buf) {
+                    Ok(0) => continue,
+                    Ok(n) => match str::from_utf8(&buf[..n]) {
+                        Ok(request) => {
+                            let mut splitted_request = request.split_whitespace();
+                            let method = splitted_request.next();
+                            let body = splitted_request.next();
+                            match method {
+                                Some("put") => {
+                                    if let Some(x) = body {
+                                        handle_put(x, file_path);
+                                    } else {
+                                        println!("Cannot handle put command");
+                                    }
+                                }
+                                Some("get") => {
+                                    if let Some(x) = body {
+                                        handle_get(x, file_path);
+                                    } else {
+                                        println!("Cannot handle get command");
+                                    }
+                                }
+                                Some("maxoffset") => {
+                                    handle_maxoffset(file_path);
+                                }
+                                _ => println!("Cannot handle command"),
+                            }
+                        }
+                        Err(_) => continue,
+                    },
+                    Err(_) => continue,
                 }
             }
-            Some("get") => {
-                if let Some(x) = body {
-                    handle_get(x, file_path);
-                } else {
-                    println!("Cannot handle get command");
-                }
-            }
-            Some("maxoffset") => {
-                handle_maxoffset(file_path);
-            }
-            _ => println!("Cannot handle command"),
+            Some(Err(_)) => continue,
+            None => continue,
         }
     }
 }
