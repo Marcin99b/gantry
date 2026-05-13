@@ -17,7 +17,11 @@ fn main() {
                 match stream.read(&mut buf) {
                     Ok(0) => continue,
                     Ok(n) => match str::from_utf8(&buf[..n]) {
-                        Ok(request) => handle_request(request, file_path),
+                        Ok(request) => {
+                            let response = handle_request(request, file_path);
+                            let bytes = response.as_bytes();
+                            stream.write_all(bytes).unwrap();
+                        }
                         Err(_) => continue,
                     },
                     Err(_) => continue,
@@ -29,34 +33,36 @@ fn main() {
     }
 }
 
-fn handle_request(request: &str, file_path: &str) {
+fn handle_request(request: &str, file_path: &str) -> String {
     let mut splitted_request = request.split_whitespace();
     let method = splitted_request.next();
     let body = splitted_request.next();
-    match method {
+    let response = match method {
         Some("put") => {
             if let Some(x) = body {
-                handle_put(x, file_path);
+                return handle_put(x, file_path);
             } else {
-                println!("Cannot handle put command");
+                return "Cannot handle put command".to_string();
             }
         }
         Some("get") => {
             if let Some(x) = body {
-                handle_get(x, file_path);
+                return handle_get(x, file_path);
             } else {
-                println!("Cannot handle get command");
+                return "Cannot handle get command".to_string();
             }
         }
         Some("maxoffset") => {
-            handle_maxoffset(file_path);
+            return handle_maxoffset(file_path);
         }
-        _ => println!("Cannot handle command"),
-    }
+        Some(parsed) => format!("Method {} not found", parsed).to_string(),
+        None => "Cannot handle command".to_string(),
+    };
+
+    response
 }
 
-fn handle_put(command: &str, file_path: &str) {
-    println!("Method: put; Data: {}", command);
+fn handle_put(command: &str, file_path: &str) -> String {
     let mut buffer = OpenOptions::new()
         .append(true)
         .create(true)
@@ -66,30 +72,28 @@ fn handle_put(command: &str, file_path: &str) {
     buffer
         .write_all(format!("{}\n", command).as_bytes())
         .unwrap();
+    "Ok".to_string()
 }
 
-fn handle_get(command: &str, file_path: &str) {
-    println!("Method: get; Data: {}", command);
+fn handle_get(command: &str, file_path: &str) -> String {
     let offset = command.parse::<usize>().unwrap();
     let mut buffer = File::open(file_path).unwrap();
     let mut buf = String::new();
     buffer.read_to_string(&mut buf).unwrap();
     let line = buf.lines().nth(offset).unwrap();
-    println!("{}", line);
+    line.to_string()
 }
 
-fn handle_maxoffset(file_path: &str) {
-    println!("Method: maxoffset;");
+fn handle_maxoffset(file_path: &str) -> String {
     let mut buffer = File::open(file_path).unwrap();
     let mut buf = String::new();
     buffer.read_to_string(&mut buf).unwrap();
 
     let lines_count = buf.lines().count();
     if lines_count == 0 {
-        println!("No messages found");
-        return;
+        return "No messages found".to_string();
     }
 
     let max_offset = lines_count - 1;
-    println!("{}", max_offset);
+    max_offset.to_string()
 }
