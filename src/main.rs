@@ -11,19 +11,27 @@ fn main() {
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap();
         let mut splitted_input = input.split_whitespace();
-        let method = splitted_input.next().unwrap();
+        let method = splitted_input.next();
         let body = splitted_input.next();
         match method {
-            "put" => {
-                handle_put(body.unwrap(), file_path);
+            Some("put") => {
+                if let Some(x) = body {
+                    handle_put(x, file_path);
+                } else {
+                    println!("Cannot handle put command");
+                }
             }
-            "get" => {
-                handle_get(body.unwrap(), file_path);
+            Some("get") => {
+                if let Some(x) = body {
+                    handle_get(x, file_path);
+                } else {
+                    println!("Cannot handle get command");
+                }
             }
-            "maxoffset" => {
+            Some("maxoffset") => {
                 handle_maxoffset(file_path);
             }
-            _ => panic!("Command unknown"),
+            _ => println!("Cannot handle command"),
         }
     }
 }
@@ -56,7 +64,13 @@ fn handle_maxoffset(file_path: &str) {
     let mut buffer = File::open(file_path).unwrap();
     let mut buf = String::new();
     buffer.read_to_string(&mut buf).unwrap();
-    let line = buf.lines().count();
-    let offset = line - 1;
-    println!("{}", offset);
+
+    let lines_count = buf.lines().count();
+    if lines_count == 0 {
+        println!("No messages found");
+        return;
+    }
+
+    let max_offset = lines_count - 1;
+    println!("{}", max_offset);
 }
