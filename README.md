@@ -8,7 +8,7 @@ An event streaming broker, written in Rust.
 
 - [x] append-only log on disk
 - [ ] minimal wire protocol over TCP (length-prefixed frames)
-- [ ] produce and fetch from an offset
+- [x] produce and fetch from an offset
 - [ ] CLI for publishing and tailing
 - [ ] tracing and structured logging wired in from the start
 
