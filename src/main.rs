@@ -13,12 +13,15 @@ fn main() {
     loop {
         match listener.incoming().next() {
             Some(Ok(mut stream)) => {
+                println!("Connection from: {}", stream.peer_addr().unwrap().ip());
                 let mut buf = [0u8; 4096];
                 match stream.read(&mut buf) {
                     Ok(0) => continue,
                     Ok(n) => match str::from_utf8(&buf[..n]) {
                         Ok(request) => {
+                            println!("Request: {}", request);
                             let response = handle_request(request, file_path);
+                            println!("Response: {}", response);
                             let bytes = response.as_bytes();
                             stream.write_all(bytes).unwrap();
                         }
@@ -26,6 +29,7 @@ fn main() {
                     },
                     Err(_) => continue,
                 }
+                println!();
             }
             Some(Err(_)) => continue,
             None => continue,
