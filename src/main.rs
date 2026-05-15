@@ -70,14 +70,14 @@ fn handle_request(request: &str, file_path: &str) -> String {
             if let Some(x) = body {
                 handle_put(x, file_path)
             } else {
-                "Cannot handle put command".to_string()
+                "ERROR: 001; Cannot handle put command".to_string()
             }
         }
         Some("get") => {
             if let Some(x) = body {
                 handle_get(x, file_path)
             } else {
-                "Cannot handle get command".to_string()
+                "ERROR: 002; Cannot handle get command".to_string()
             }
         }
         Some("maxoffset") => handle_maxoffset(file_path),
@@ -117,7 +117,7 @@ fn handle_maxoffset(file_path: &str) -> String {
 
     let lines_count = buf.lines().count();
     if lines_count == 0 {
-        return "No messages found".to_string();
+        return "ERROR: 003; No messages found".to_string();
     }
 
     let max_offset = lines_count - 1;
