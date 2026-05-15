@@ -4,11 +4,31 @@ use std::{
     net::TcpListener,
 };
 
-use log::{error, info, warn};
+use log::{Level, LevelFilter, Metadata, Record, error, info, set_max_level, warn};
 
-//struct Message {}
+struct SimpleLogger;
+
+impl log::Log for SimpleLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= Level::Info
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            println!("{} - {}", record.level(), record.args());
+        }
+    }
+
+    fn flush(&self) {}
+}
+
+static LOGGER: SimpleLogger = SimpleLogger;
 
 fn main() {
+    if let Ok(()) = log::set_logger(&LOGGER) {
+        set_max_level(LevelFilter::Info)
+    }
+
     let file_path = "data.txt";
     let listener = TcpListener::bind("127.0.0.1:2137").expect("Failed to bind TCP listener");
 
