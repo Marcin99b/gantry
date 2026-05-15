@@ -4,6 +4,8 @@ use std::{
     net::TcpListener,
 };
 
+use log::{error, info, warn};
+
 //struct Message {}
 
 fn main() {
@@ -16,22 +18,23 @@ fn main() {
                 println!("Connection from: {}", stream.peer_addr().unwrap().ip());
                 let mut buf = [0u8; 4096];
                 match stream.read(&mut buf) {
-                    Ok(0) => continue,
+                    Ok(0) => {
+                        warn!("Empty stream");
+                    }
                     Ok(n) => match str::from_utf8(&buf[..n]) {
                         Ok(request) => {
-                            println!("Request: {}", request);
+                            info!("Request: {}", request);
                             let response = handle_request(request, file_path);
-                            println!("Response: {}", response);
+                            info!("Response: {}", response);
                             let bytes = response.as_bytes();
                             stream.write_all(bytes).unwrap();
                         }
-                        Err(_) => continue,
+                        Err(x) => error!("{}", x),
                     },
-                    Err(_) => continue,
+                    Err(x) => error!("{}", x),
                 }
-                println!();
             }
-            Some(Err(_)) => continue,
+            Some(Err(x)) => error!("{}", x),
             None => continue,
         }
     }
