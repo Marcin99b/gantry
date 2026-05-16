@@ -1,3 +1,4 @@
+mod commands;
 mod commands_handler;
 
 use std::{
