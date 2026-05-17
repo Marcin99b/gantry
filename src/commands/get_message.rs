@@ -13,10 +13,7 @@ pub fn handle(command: Command) -> Option<Vec<u8>> {
         .read_to_end(&mut buf)
         .unwrap();
 
-    match entries(&buf).nth(offset) {
-        Some(result) => Some(result.to_owned()),
-        None => None,
-    }
+    entries(&buf).nth(offset).map(|result| result.to_owned())
 }
 
 fn entries(data: &[u8]) -> impl Iterator<Item = &[u8]> {
