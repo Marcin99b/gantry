@@ -25,7 +25,7 @@ fn entries(data: &[u8]) -> impl Iterator<Item = &[u8]> {
         let i = rest
             .windows(SEPARATOR.len())
             .position(|w| w == SEPARATOR)
-            .unwrap_or(rest.len() - SEPARATOR.len() + 1); // brak sep = ostatni wpis
+            .unwrap_or(rest.len() - SEPARATOR.len() + 1);
         let item = &rest[..i.min(rest.len())];
         rest = rest.get(i + SEPARATOR.len()..).unwrap_or(&[]);
         Some(item)
