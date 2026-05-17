@@ -1,5 +1,5 @@
 use crate::commands::models::Command;
 
-pub fn handle(command: Command) -> Option<Vec<u8>> {
-    None
+pub fn handle(_: Command) -> Option<Vec<u8>> {
+    Some(vec![1])
 }
