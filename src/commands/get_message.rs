@@ -1,3 +1,36 @@
+use std::{fs::File, io::Read};
+
 use crate::commands::models::Command;
 
-pub fn handle(command: Command) {}
+const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
+
+pub fn handle(command: Command) -> Option<Vec<u8>> {
+    let offset = u32::from_be_bytes(command.data.try_into().unwrap()) as usize;
+
+    let mut buf = Vec::new();
+    File::open("data.txt")
+        .unwrap()
+        .read_to_end(&mut buf)
+        .unwrap();
+
+    match entries(&buf).nth(offset) {
+        Some(result) => Some(result.to_owned()),
+        None => None,
+    }
+}
+
+fn entries(data: &[u8]) -> impl Iterator<Item = &[u8]> {
+    let mut rest = data;
+    std::iter::from_fn(move || {
+        if rest.is_empty() {
+            return None;
+        }
+        let i = rest
+            .windows(SEPARATOR.len())
+            .position(|w| w == SEPARATOR)
+            .unwrap_or(rest.len() - SEPARATOR.len() + 1); // brak sep = ostatni wpis
+        let item = &rest[..i.min(rest.len())];
+        rest = rest.get(i + SEPARATOR.len()..).unwrap_or(&[]);
+        Some(item)
+    })
+}

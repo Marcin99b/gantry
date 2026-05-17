@@ -2,6 +2,8 @@ use std::{fs::OpenOptions, io::Write};
 
 use crate::commands::models::Command;
 
+static separator = "\r\n\r\n\r\n".as_bytes();
+
 pub fn handle(command: Command) {
     let mut buffer = OpenOptions::new()
         .append(true)
@@ -10,6 +12,5 @@ pub fn handle(command: Command) {
         .unwrap();
 
     buffer.write_all(&command.data).unwrap();
-
-    buffer.write_all("\r\n\r\n\r\n".as_bytes()).unwrap();
+    buffer.write_all(separator).unwrap();
 }
