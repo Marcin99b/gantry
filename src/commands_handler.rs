@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::io::Write;
 use std::{
-    io::{Error, Read},
+    io::Read,
     net::{TcpListener, TcpStream},
 };
 
