@@ -5,7 +5,7 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-use log::{error, info};
+use log::error;
 
 use crate::commands;
 use crate::commands::models::{Command, CommandType};
