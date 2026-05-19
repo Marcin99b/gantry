@@ -47,6 +47,7 @@ fn map_command(stream: &TcpStream) -> Option<Command> {
     }
 }
 
+//todo add max length limit
 fn read_stream_to_end(mut stream: &TcpStream) -> Vec<u8> {
     let mut request_buffer = vec![];
     loop {
