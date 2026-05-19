@@ -34,6 +34,8 @@ pub fn handle(listener: TcpListener) {
 
 fn map_command(mut stream: &TcpStream) -> Option<Command> {
     let mut buf = [0u8; 4096];
+    // todo read full stream
+    // then parse command
     match stream.read(&mut buf) {
         Ok(0) => None,
         Ok(n) => match CommandType::try_from(buf[0]) {
