@@ -32,22 +32,33 @@ pub fn handle(listener: TcpListener) {
     }
 }
 
-fn map_command(mut stream: &TcpStream) -> Option<Command> {
-    let mut buf = [0u8; 4096];
-    // todo read full stream
-    // then parse command
-    match stream.read(&mut buf) {
-        Ok(0) => None,
-        Ok(n) => match CommandType::try_from(buf[0]) {
-            Ok(command_type) => Some(Command {
-                command_type,
-                data: buf[1..n].to_vec(),
-            }),
-            Err(_) => None,
-        },
-        Err(x) => {
-            error!("{}", x);
-            None
+fn map_command(stream: &TcpStream) -> Option<Command> {
+    let full_data = read_stream_to_end(stream);
+    if full_data.is_empty() {
+        return None;
+    }
+
+    match CommandType::try_from(full_data[0]) {
+        Ok(command_type) => Some(Command {
+            command_type,
+            data: full_data[1..].to_vec(),
+        }),
+        Err(_) => None,
+    }
+}
+
+fn read_stream_to_end(mut stream: &TcpStream) -> Vec<u8> {
+    let mut request_buffer = vec![];
+    loop {
+        let mut buf = [0u8; 1024];
+        match stream.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => request_buffer.extend_from_slice(&buf[..n]),
+            Err(x) => {
+                error!("{}", x);
+                break;
+            }
         }
     }
+    request_buffer
 }
