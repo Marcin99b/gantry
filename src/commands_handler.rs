@@ -1,11 +1,10 @@
+use log::{error, info, warn};
 use std::convert::TryFrom;
 use std::io::Write;
 use std::{
     io::Read,
     net::{TcpListener, TcpStream},
 };
-
-use log::error;
 
 use crate::commands;
 use crate::commands::models::{Command, CommandType};
@@ -26,7 +25,12 @@ pub fn handle(listener: TcpListener) {
             };
 
             if let Some(data) = response {
+                info!("Response length: {}", data.len());
                 stream.write_all(&data).unwrap();
+            } else {
+                let mut empty_array = [0u8; 1];
+                empty_array[0] = 1;
+                stream.write_all(&empty_array).unwrap();
             }
         }
     }
@@ -35,9 +39,9 @@ pub fn handle(listener: TcpListener) {
 fn map_command(stream: &TcpStream) -> Option<Command> {
     let full_data = read_stream_to_end(stream);
     if full_data.is_empty() {
+        warn!("Stream was empty");
         return None;
     }
-
     match CommandType::try_from(full_data[0]) {
         Ok(command_type) => Some(Command {
             command_type,
@@ -47,19 +51,28 @@ fn map_command(stream: &TcpStream) -> Option<Command> {
     }
 }
 
-//todo add max length limit
+//todo return Result<>
 fn read_stream_to_end(mut stream: &TcpStream) -> Vec<u8> {
+    let request_limit = 1024 * 10;
     let mut request_buffer = vec![];
     loop {
         let mut buf = [0u8; 1024];
         match stream.read(&mut buf) {
-            Ok(0) => break,
-            Ok(n) => request_buffer.extend_from_slice(&buf[..n]),
+            Ok(0) => {
+                break;
+            }
+            Ok(n) => {
+                if request_buffer.len() + n > request_limit {
+                    panic!("Request length exceeded limit {}", request_limit);
+                }
+                request_buffer.extend_from_slice(&buf[..n])
+            }
             Err(x) => {
                 error!("{}", x);
                 break;
             }
         }
     }
+
     request_buffer
 }
