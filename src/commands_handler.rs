@@ -1,6 +1,7 @@
 use log::{error, info, warn};
 use std::convert::TryFrom;
-use std::io::Write;
+use std::error::Error;
+use std::io::{self, Write};
 use std::{
     io::Read,
     net::{TcpListener, TcpStream},
@@ -37,22 +38,29 @@ pub fn handle(listener: TcpListener) {
 }
 
 fn map_command(stream: &TcpStream) -> Option<Command> {
-    let full_data = read_stream_to_end(stream);
-    if full_data.is_empty() {
-        warn!("Stream was empty");
-        return None;
-    }
-    match CommandType::try_from(full_data[0]) {
-        Ok(command_type) => Some(Command {
-            command_type,
-            data: full_data[1..].to_vec(),
-        }),
-        Err(_) => None,
+    match read_stream_to_end(stream) {
+        Ok(full_data) => {
+            if full_data.is_empty() {
+                warn!("Stream was empty");
+                return None;
+            }
+            match CommandType::try_from(full_data[0]) {
+                Ok(command_type) => Some(Command {
+                    command_type,
+                    data: full_data[1..].to_vec(),
+                }),
+                Err(_) => None,
+            }
+        }
+        Err(x) => {
+            error!("{}", x);
+            None
+        }
     }
 }
 
 //todo return Result<>
-fn read_stream_to_end(mut stream: &TcpStream) -> Vec<u8> {
+fn read_stream_to_end(mut stream: &TcpStream) -> io::Result<Vec<u8>> {
     let request_limit = 1024 * 10;
     let mut request_buffer = vec![];
     loop {
@@ -74,5 +82,5 @@ fn read_stream_to_end(mut stream: &TcpStream) -> Vec<u8> {
         }
     }
 
-    request_buffer
+    Ok(request_buffer)
 }
