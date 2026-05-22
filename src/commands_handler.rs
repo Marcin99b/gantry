@@ -49,7 +49,10 @@ fn map_command(stream: &TcpStream) -> Option<Command> {
                     command_type,
                     data: full_data[1..].to_vec(),
                 }),
-                Err(_) => None,
+                Err(x) => {
+                    error!("{}", x);
+                    None
+                }
             }
         }
         Err(x) => {
