@@ -70,9 +70,11 @@ fn read_stream_to_end(mut stream: &TcpStream) -> io::Result<Vec<u8>> {
         let mut buf = [0u8; 1024];
         match stream.read(&mut buf) {
             Ok(0) => {
+                info!("Incoming bytes: 0");
                 break;
             }
             Ok(n) => {
+                info!("Incoming bytes: {}", n);
                 if request_buffer.len() + n > request_limit {
                     panic!("Request length exceeded limit {}", request_limit);
                 }
