@@ -9,6 +9,8 @@ use std::{
 use crate::commands;
 use crate::commands::models::{Command, CommandType};
 
+static OK: &[u8] = b"OK";
+
 pub fn handle(listener: TcpListener) {
     for incoming in listener.incoming() {
         let Ok(mut stream) = incoming else { continue };
@@ -23,10 +25,12 @@ pub fn handle(listener: TcpListener) {
                 CommandType::SubscribeTopic => commands::subscribe_topic::handle(command),
                 CommandType::UnsubscribeTopic => commands::unsubscribe_topic::handle(command),
             };
-            if let Some(data) = response {
-                info!("Response length: {}", data.len());
-                stream.write_all(&data).unwrap();
-            }
+
+            let data = response.unwrap_or_else(|| OK.to_vec());
+            info!("Response length: {}", data.len());
+            stream.write_all(&data).unwrap();
+            stream.flush().unwrap();
+            //stream.shutdown(std::net::Shutdown::Write).unwrap();
         }
     }
 }
