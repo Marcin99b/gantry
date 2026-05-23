@@ -1,6 +1,5 @@
 use log::{error, info, warn};
 use std::convert::TryFrom;
-use std::error::Error;
 use std::io::{self, Write};
 use std::{
     io::Read,
@@ -24,14 +23,9 @@ pub fn handle(listener: TcpListener) {
                 CommandType::SubscribeTopic => commands::subscribe_topic::handle(command),
                 CommandType::UnsubscribeTopic => commands::unsubscribe_topic::handle(command),
             };
-
             if let Some(data) = response {
                 info!("Response length: {}", data.len());
                 stream.write_all(&data).unwrap();
-            } else {
-                let mut empty_array = [0u8; 1];
-                empty_array[0] = 1;
-                stream.write_all(&empty_array).unwrap();
             }
         }
     }
@@ -62,7 +56,6 @@ fn map_command(stream: &TcpStream) -> Option<Command> {
     }
 }
 
-//todo return Result<>
 fn read_stream_to_end(mut stream: &TcpStream) -> io::Result<Vec<u8>> {
     let request_limit = 1024 * 10;
     let mut request_buffer = vec![];
@@ -71,7 +64,7 @@ fn read_stream_to_end(mut stream: &TcpStream) -> io::Result<Vec<u8>> {
         match stream.read(&mut buf) {
             Ok(0) => {
                 info!("Incoming bytes: 0");
-                break;
+                return Ok(request_buffer);
             }
             Ok(n) => {
                 info!("Incoming bytes: {}", n);
@@ -82,10 +75,8 @@ fn read_stream_to_end(mut stream: &TcpStream) -> io::Result<Vec<u8>> {
             }
             Err(x) => {
                 error!("{}", x);
-                break;
+                panic!("{}", x)
             }
         }
     }
-
-    Ok(request_buffer)
 }
