@@ -1,4 +1,3 @@
-use log::{error, info, warn};
 use std::convert::TryFrom;
 use std::io::{self, Write};
 use std::{
@@ -14,7 +13,7 @@ static OK: &[u8] = b"OK";
 pub fn handle(listener: TcpListener) {
     for incoming in listener.incoming() {
         let Ok(mut stream) = incoming else { continue };
-        if let Some(command) = map_command(&stream) {
+        if let Ok(command) = read_command(&mut stream) {
             let response = match command.command_type {
                 CommandType::Ping => commands::ping::handle(command),
                 CommandType::GetTopics => commands::get_topics::handle(command),
@@ -25,62 +24,30 @@ pub fn handle(listener: TcpListener) {
                 CommandType::SubscribeTopic => commands::subscribe_topic::handle(command),
                 CommandType::UnsubscribeTopic => commands::unsubscribe_topic::handle(command),
             };
-
             let data = response.unwrap_or_else(|| OK.to_vec());
-            info!("Response length: {}", data.len());
-            stream.write_all(&data).unwrap();
-            stream.flush().unwrap();
-            //stream.shutdown(std::net::Shutdown::Write).unwrap();
+            write_response(&mut stream, &data).unwrap();
         }
     }
 }
 
-fn map_command(stream: &TcpStream) -> Option<Command> {
-    match read_stream_to_end(stream) {
-        Ok(full_data) => {
-            if full_data.is_empty() {
-                warn!("Stream was empty");
-                return None;
-            }
-            match CommandType::try_from(full_data[0]) {
-                Ok(command_type) => Some(Command {
-                    command_type,
-                    data: full_data[1..].to_vec(),
-                }),
-                Err(x) => {
-                    error!("{}", x);
-                    None
-                }
-            }
-        }
-        Err(x) => {
-            error!("{}", x);
-            None
-        }
+fn read_command(stream: &mut TcpStream) -> io::Result<Command> {
+    let mut header = [0u8; 5];
+    stream.read_exact(&mut header)?;
+
+    let command_type = CommandType::try_from(header[0]).unwrap();
+
+    let data_len = u32::from_le_bytes(header[1..5].try_into().unwrap()) as usize;
+    let mut data = vec![0u8; data_len];
+    if data_len > 0 {
+        stream.read_exact(&mut data)?;
     }
+
+    Ok(Command { command_type, data })
 }
 
-fn read_stream_to_end(mut stream: &TcpStream) -> io::Result<Vec<u8>> {
-    let request_limit = 1024 * 10;
-    let mut request_buffer = vec![];
-    loop {
-        let mut buf = [0u8; 1024];
-        match stream.read(&mut buf) {
-            Ok(0) => {
-                info!("Incoming bytes: 0");
-                return Ok(request_buffer);
-            }
-            Ok(n) => {
-                info!("Incoming bytes: {}", n);
-                if request_buffer.len() + n > request_limit {
-                    panic!("Request length exceeded limit {}", request_limit);
-                }
-                request_buffer.extend_from_slice(&buf[..n])
-            }
-            Err(x) => {
-                error!("{}", x);
-                panic!("{}", x)
-            }
-        }
-    }
+fn write_response(stream: &mut TcpStream, data: &[u8]) -> io::Result<()> {
+    let len = (data.len() as u32).to_le_bytes();
+    stream.write_all(&len)?;
+    stream.write_all(data)?;
+    stream.flush()
 }

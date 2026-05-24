@@ -16,5 +16,6 @@ pub fn handle(command: Command) -> Option<Vec<u8>> {
 
     buffer.write_all(&command.data).unwrap();
     buffer.write_all(SEPARATOR).unwrap();
+
     None
 }
