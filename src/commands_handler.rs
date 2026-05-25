@@ -14,16 +14,7 @@ pub fn handle(listener: TcpListener) {
     for incoming in listener.incoming() {
         let Ok(mut stream) = incoming else { continue };
         if let Ok(command) = read_command(&mut stream) {
-            let response = match command.command_type {
-                CommandType::Ping => commands::ping::handle(command),
-                CommandType::GetTopics => commands::get_topics::handle(command),
-                CommandType::CreateTopic => commands::create_topic::handle(command),
-                CommandType::DeleteTopic => commands::delete_topic::handle(command),
-                CommandType::PutMessage => commands::put_message::handle(command),
-                CommandType::GetMessage => commands::get_message::handle(command),
-                CommandType::SubscribeTopic => commands::subscribe_topic::handle(command),
-                CommandType::UnsubscribeTopic => commands::unsubscribe_topic::handle(command),
-            };
+            let response = execute(command);
             let data = response.unwrap_or_else(|| OK.to_vec());
             write_response(&mut stream, &data).unwrap();
         }
@@ -50,4 +41,17 @@ fn write_response(stream: &mut TcpStream, data: &[u8]) -> io::Result<()> {
     stream.write_all(&len)?;
     stream.write_all(data)?;
     stream.flush()
+}
+
+fn execute(command: Command) -> Option<Vec<u8>> {
+    match command.command_type {
+        CommandType::Ping => commands::ping::handle(command),
+        CommandType::GetTopics => commands::get_topics::handle(command),
+        CommandType::CreateTopic => commands::create_topic::handle(command),
+        CommandType::DeleteTopic => commands::delete_topic::handle(command),
+        CommandType::PutMessage => commands::put_message::handle(command),
+        CommandType::GetMessage => commands::get_message::handle(command),
+        CommandType::SubscribeTopic => commands::subscribe_topic::handle(command),
+        CommandType::UnsubscribeTopic => commands::unsubscribe_topic::handle(command),
+    }
 }
