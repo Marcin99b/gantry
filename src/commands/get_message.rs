@@ -8,7 +8,7 @@ const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 
 pub fn handle(command: Command) -> Option<Vec<u8>> {
     info!("Starting GET");
-    let offset = u32::from_be_bytes(command.data.try_into().unwrap()) as usize;
+    let offset = u32::from_le_bytes(command.data.try_into().unwrap()) as usize;
     let mut buf = Vec::new();
     File::open("data.txt")
         .unwrap()
