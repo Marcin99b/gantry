@@ -21,6 +21,25 @@ pub fn handle(listener: TcpListener) {
     }
 }
 
+/*
+ * planned format
+ *
+ * 1B = command type
+ * rest = data for command handler
+ *
+ * GET = 1B topic | rest data
+ * PUT = 1B topic | rest data
+ *
+ * CREATE TOPIC = 1B topic
+ * DELETE TOPIC = 1B topic
+ * GET TOPICS = empty
+ *
+ * SUBSCRIBE = 1B topic
+ * UNSUBSCRIBE = 1B topic
+ *
+ * PING = empty
+ */
+
 fn read_command(stream: &mut TcpStream) -> io::Result<Command> {
     let mut header = [0u8; 5];
     stream.read_exact(&mut header)?;
