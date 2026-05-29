@@ -6,6 +6,9 @@ use crate::commands::models::Command;
 
 const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 
+// todo get topic id
+// first int = offset
+// second int = topic id
 pub fn handle(command: Command) -> Option<Vec<u8>> {
     info!("Starting GET");
     let offset = u32::from_le_bytes(command.data.try_into().unwrap()) as usize;
