@@ -11,7 +11,7 @@ static SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 // rest = data
 pub fn handle(command: Command) -> Option<Vec<u8>> {
     info!("Starting PUT");
-    let topic_id = u32::from_le_bytes(command.data[..3].try_into().unwrap());
+    let topic_id = u32::from_le_bytes(command.data[..4].try_into().unwrap());
     let mut buffer = OpenOptions::new()
         .append(true)
         .create(true)
