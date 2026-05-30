@@ -7,13 +7,14 @@ use crate::commands::models::Command;
 const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 
 // todo get topic id
-// first int = offset
-// second int = topic id
+// first int = topic id
+// second int = offset
 pub fn handle(command: Command) -> Option<Vec<u8>> {
     info!("Starting GET");
-    let offset = u32::from_le_bytes(command.data.try_into().unwrap()) as usize;
+    let topic_id = u32::from_le_bytes(command.data[..3].try_into().unwrap());
+    let offset = u32::from_le_bytes(command.data[4..7].try_into().unwrap()) as usize;
     let mut buf = Vec::new();
-    File::open("data.txt")
+    File::open(format!("{}.txt", topic_id))
         .unwrap()
         .read_to_end(&mut buf)
         .unwrap();
