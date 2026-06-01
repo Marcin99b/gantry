@@ -8,8 +8,12 @@ const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 
 // first uint = topic id
 // second uint = offset
+// todo - should result Result<> instead just option because there can be error
 pub fn handle(command: Command) -> Option<Vec<u8>> {
     info!("Starting GET");
+    if command.data.len() != 8 {
+        panic!("Input data length is different than 8 bytes (4B topic id + 4B offset)");
+    }
     let topic_id = u32::from_le_bytes(command.data[..4].try_into().unwrap());
     let offset = u32::from_le_bytes(command.data[4..].try_into().unwrap()) as usize;
     let mut buf = Vec::new();
