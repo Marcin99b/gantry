@@ -8,7 +8,7 @@ const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 
 // first uint = topic id
 // second uint = offset
-// todo - should result Result<> instead just option because there can be error
+// todo - should return  Result<> instead just option because there can be error
 pub fn handle(command: Command) -> Option<Vec<u8>> {
     info!("Starting GET");
     if command.data.len() != 8 {
