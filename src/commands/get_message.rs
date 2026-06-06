@@ -10,6 +10,7 @@ const SEPARATOR: &[u8] = b"\r\n\r\n\r\n";
 // second uint = offset
 // todo - should return  Result<> instead just option because there can be error
 pub fn handle(command: Command) -> Option<Vec<u8>> {
+    // todo check if topic exist
     info!("Starting GET");
     if command.data.len() != 8 {
         panic!("Input data length is different than 8 bytes (4B topic id + 4B offset)");
